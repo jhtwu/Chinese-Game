@@ -29,11 +29,4 @@ body {
   width: 100%;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+/* 移除了未定義的 Tailwind 類 */
