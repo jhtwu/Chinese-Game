@@ -22,7 +22,7 @@ import { CollisionDetector } from './CollisionDetector';
 /**
  * 遊戲引擎動作結果
  */
-export interface GameAction Result {
+export interface GameActionResult {
   success: boolean;
   newTetromino?: Tetromino;
   newGrid?: Grid;
