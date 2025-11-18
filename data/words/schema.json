@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chinese Tetris Word Database Schema",
+  "description": "Schema for validating word database JSON files",
+  "type": "object",
+  "required": ["version", "lastUpdated", "hskLevel", "totalWords", "words"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Database version (semantic versioning)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "description": "Last update date (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "hskLevel": {
+      "type": "integer",
+      "description": "HSK level of this database file",
+      "minimum": 1,
+      "maximum": 6
+    },
+    "totalWords": {
+      "type": "integer",
+      "description": "Total number of words in this file",
+      "minimum": 0
+    },
+    "words": {
+      "type": "array",
+      "description": "Array of word entries",
+      "items": {
+        "$ref": "#/definitions/word"
+      }
+    }
+  },
+  "definitions": {
+    "word": {
+      "type": "object",
+      "required": [
+        "id",
+        "word",
+        "characters",
+        "pinyin",
+        "pinyinArray",
+        "hskLevel",
+        "category",
+        "definition",
+        "frequency",
+        "isIdiom"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier (usually pinyin without tones)",
+          "minLength": 1
+        },
+        "word": {
+          "type": "string",
+          "description": "The complete Chinese word",
+          "minLength": 1,
+          "maxLength": 10
+        },
+        "characters": {
+          "type": "array",
+          "description": "Array of individual characters",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1
+          },
+          "minItems": 2,
+          "maxItems": 4
+        },
+        "pinyin": {
+          "type": "string",
+          "description": "Pinyin with tone marks (space-separated)",
+          "minLength": 1
+        },
+        "pinyinArray": {
+          "type": "array",
+          "description": "Array of pinyin for each character",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 2,
+          "maxItems": 4
+        },
+        "hskLevel": {
+          "type": "integer",
+          "description": "HSK level (1-6)",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "category": {
+          "type": "string",
+          "description": "Word category",
+          "enum": [
+            "education",
+            "relationship",
+            "country",
+            "language",
+            "object",
+            "food",
+            "time",
+            "emotion",
+            "action",
+            "nature",
+            "body",
+            "color",
+            "number",
+            "direction",
+            "animal",
+            "plant",
+            "weather",
+            "transport",
+            "work",
+            "health",
+            "other"
+          ]
+        },
+        "definition": {
+          "type": "object",
+          "required": ["en", "zh"],
+          "properties": {
+            "en": {
+              "type": "string",
+              "description": "English definition",
+              "minLength": 1
+            },
+            "zh": {
+              "type": "string",
+              "description": "Chinese definition",
+              "minLength": 1
+            }
+          }
+        },
+        "example": {
+          "type": "string",
+          "description": "Example sentence (optional but recommended)"
+        },
+        "frequency": {
+          "type": "number",
+          "description": "Usage frequency (0-1)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "isIdiom": {
+          "type": "boolean",
+          "description": "Whether this is a Chinese idiom (成語)"
+        }
+      }
+    }
+  }
+}
