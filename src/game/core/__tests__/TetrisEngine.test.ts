@@ -210,7 +210,7 @@ describe('TetrisEngine', () => {
       const tetromino = createTetromino(TetrominoType.O, { x: 4, y: 0 });
       engine.setCurrentTetromino(tetromino);
 
-      const grid Before = engine.getGrid();
+      const gridBefore = engine.getGrid();
       const occupiedBefore = gridBefore.flat().filter((cell) => cell.occupied).length;
 
       engine.hardDrop();

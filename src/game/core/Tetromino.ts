@@ -145,7 +145,7 @@ export function getTetrominoBlocks(tetromino: Tetromino): Position[] {
  * @param tetromino 方塊
  * @returns 邊界框 {minX, maxX, minY, maxY}
  */
-export function getTetromino Bounds(tetromino: Tetromino) {
+export function getTetromin oBounds(tetromino: Tetromino) {
   const blocks = getTetrominoBlocks(tetromino);
 
   if (blocks.length === 0) {
