@@ -1,14 +1,9 @@
 /**
  * Vitest 測試設置文件
+ * 用於核心遊戲邏輯測試（無 UI 依賴）
  */
 
-import { expect, afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
-
-// 每個測試後自動清理
-afterEach(() => {
-  cleanup();
-});
+import { expect } from 'vitest';
 
 // 自定義匹配器（可選）
 expect.extend({
