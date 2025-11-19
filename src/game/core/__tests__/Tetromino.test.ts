@@ -10,7 +10,7 @@ import {
   moveTetromino,
   assignCharactersToTetromino,
   getTetrominoBlocks,
-  getTetromin oBounds,
+  getTetrominoBounds,
 } from '../Tetromino';
 import { getTetrominoShape, getRandomTetrominoType } from '../tetrominoShapes';
 
@@ -167,7 +167,7 @@ describe('Tetromino', () => {
   describe('getTetrominoBounds', () => {
     it('should calculate bounds for I-type tetromino', () => {
       const tetromino = createTetromino(TetrominoType.I, { x: 3, y: 0 });
-      const bounds = getTetromin oBounds(tetromino);
+      const bounds = getTetrominoBounds(tetromino);
 
       expect(bounds.minX).toBe(3);
       expect(bounds.maxX).toBe(6);
