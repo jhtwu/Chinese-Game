@@ -62,19 +62,26 @@ describe('TetrisEngine', () => {
     });
 
     it('should not move left if blocked by locked blocks', () => {
-      // 創建一個方塊並在其左側放置障礙
+      // 使用固定的 O 型方塊以避免隨機形狀導致測試不穩定
       const tetromino = createTetromino(TetrominoType.O, { x: 3, y: 0 });
       engine.setCurrentTetromino(tetromino);
 
+      // 在方塊左側與其重疊的位置放置障礙，確保碰撞檢測能命中
       const grid = engine.getGrid();
-      // O 型方塊在 (3, 0)，形狀為：
-      // [0, 1, 1, 0]  -> 實際佔用 (4, 0), (5, 0)
-      // [0, 1, 1, 0]  -> 實際佔用 (4, 1), (5, 1)
-      // 在左側 (3, 0) 和 (3, 1) 放置障礙
-      grid[0][3].occupied = true;
-      grid[0][3].locked = true;
-      grid[1][3].occupied = true;
-      grid[1][3].locked = true;
+      const blocks = tetromino
+        .shape.map((row, rowIndex) =>
+          row.map((cell, colIndex) => ({ cell, x: colIndex, y: rowIndex }))
+        )
+        .flat()
+        .filter((b) => b.cell === 1);
+
+      for (const block of blocks) {
+        const targetX = tetromino.position.x + block.x - 1;
+        const targetY = tetromino.position.y + block.y;
+        if (targetX >= 0) {
+          grid[targetY][targetX].occupied = true;
+        }
+      }
       engine.setGrid(grid);
 
       const result = engine.moveLeft();
@@ -245,8 +252,8 @@ describe('TetrisEngine', () => {
     it('should detect game over when grid is full', () => {
       const grid = engine.getGrid();
 
-      // 在頂部行放置一些鎖定的方塊（不是滿行，避免被清除）
-      for (let col = 0; col < 8; col++) {
+      // 填滿頂部行
+      for (let col = 0; col < GRID_WIDTH; col++) {
         grid[0][col].occupied = true;
         grid[0][col].locked = true;
       }

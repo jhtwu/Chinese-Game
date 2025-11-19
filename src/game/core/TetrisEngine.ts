@@ -226,15 +226,18 @@ export class TetrisEngine {
       return { success: false, message: 'No tetromino to lock' };
     }
 
-    // 鎖定方塊到網格
-    this.grid = lockTetrominoToGrid(this.grid, this.currentTetromino);
+    // 先鎖定方塊到網格，並保留鎖定後的狀態以檢查爆頂
+    const lockedGrid = lockTetrominoToGrid(this.grid, this.currentTetromino);
+
+    // 若鎖定後的網格已經觸頂，直接判定為遊戲結束（即便之後可能會消行）
+    const isTopOut = isGridFull(lockedGrid);
 
     // 清除滿行
-    const { newGrid, clearedLines } = clearFullLines(this.grid);
+    const { newGrid, clearedLines } = clearFullLines(lockedGrid);
     this.grid = newGrid;
 
     // 檢查遊戲結束
-    if (isGridFull(this.grid)) {
+    if (isTopOut || isGridFull(this.grid)) {
       this.isGameOver = true;
       return {
         success: true,
