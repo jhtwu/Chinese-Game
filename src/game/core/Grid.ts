@@ -276,3 +276,39 @@ export function canPlaceTetromino(grid: Grid, tetromino: Tetromino): boolean {
 
   return true;
 }
+
+/**
+ * 移除匹配的方塊並應用重力
+ * @param grid 網格
+ * @param positions 要移除的位置
+ * @returns 新網格
+ */
+export function removeMatchedCells(grid: Grid, positions: Position[]): Grid {
+  let newGrid = cloneGrid(grid);
+
+  // 1. 清除匹配的格子
+  for (const pos of positions) {
+    if (isValidPosition(pos)) {
+      newGrid[pos.y][pos.x] = createEmptyCell();
+    }
+  }
+
+  // 2. 應用重力：讓上方的方塊下落
+  for (let col = 0; col < GRID_WIDTH; col++) {
+    // 從下往上掃描每一列
+    let writeRow = GRID_HEIGHT - 1; // 寫入位置
+
+    for (let readRow = GRID_HEIGHT - 1; readRow >= 0; readRow--) {
+      // 如果格子被佔用，移動到寫入位置
+      if (newGrid[readRow][col].occupied) {
+        if (writeRow !== readRow) {
+          newGrid[writeRow][col] = newGrid[readRow][col];
+          newGrid[readRow][col] = createEmptyCell();
+        }
+        writeRow--;
+      }
+    }
+  }
+
+  return newGrid;
+}
