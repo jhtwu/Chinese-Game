@@ -36,6 +36,7 @@ export function createTetromino(
       getTetrominoShape(tetrominoType, initialRotation)
     ),
     color: getTetrominoColor(tetrominoType),
+    blockCharacters: [],
   };
 
   return tetromino;
@@ -51,6 +52,56 @@ function createEmptyCharacterMatrix(shape: number[][]): (string | null)[][] {
 }
 
 /**
+ * 取得方塊目前的字符列表（依佔用格順序）
+ */
+function getOccupiedCharacters(tetromino: Tetromino): (string | null)[] {
+  if (tetromino.blockCharacters && tetromino.blockCharacters.length > 0) {
+    return tetromino.blockCharacters.map((char) => char ?? null);
+  }
+
+  const characters: (string | null)[] = [];
+
+  for (let row = 0; row < tetromino.shape.length; row++) {
+    for (let col = 0; col < tetromino.shape[row].length; col++) {
+      if (tetromino.shape[row][col] === 1) {
+        characters.push(tetromino.characters[row]?.[col] ?? null);
+      }
+    }
+  }
+
+  return characters;
+}
+
+/**
+ * 依照新的形狀將字符列表填回矩陣
+ */
+function mapCharactersToShape(
+  shape: number[][],
+  characters: (string | null)[]
+): { matrix: (string | null)[][]; blockCharacters: (string | null)[] } {
+  const matrix = createEmptyCharacterMatrix(shape);
+  const blockCharacters: (string | null)[] = [];
+  let index = 0;
+
+  for (let row = 0; row < shape.length; row++) {
+    for (let col = 0; col < shape[row].length; col++) {
+      if (shape[row][col] === 1) {
+        const fallbackChar =
+          characters.length > 0
+            ? characters[index % characters.length]
+            : null;
+        const char = characters[index] ?? fallbackChar ?? null;
+        matrix[row][col] = char;
+        blockCharacters.push(char);
+        index++;
+      }
+    }
+  }
+
+  return { matrix, blockCharacters };
+}
+
+/**
  * 旋轉方塊
  * @param tetromino 當前方塊
  * @returns 旋轉後的新方塊
@@ -58,13 +109,18 @@ function createEmptyCharacterMatrix(shape: number[][]): (string | null)[][] {
 export function rotateTetromino(tetromino: Tetromino): Tetromino {
   const newRotation = getNextRotation(tetromino.rotation);
   const newShape = getTetrominoShape(tetromino.type, newRotation);
+  const occupiedCharacters = getOccupiedCharacters(tetromino);
+  const { matrix: rotatedCharacters, blockCharacters } = mapCharactersToShape(
+    newShape,
+    occupiedCharacters
+  );
 
   return {
     ...tetromino,
     rotation: newRotation,
     shape: newShape,
-    // 保留原有的字符，但需要相應旋轉（暫時創建新的空矩陣）
-    characters: createEmptyCharacterMatrix(newShape),
+    characters: rotatedCharacters,
+    blockCharacters,
   };
 }
 
@@ -98,14 +154,15 @@ export function assignCharactersToTetromino(
   characters: string[]
 ): Tetromino {
   const characterMatrix: (string | null)[][] = [];
-  let charIndex = 0;
+  const blockCharacters: (string | null)[] = [];
+  const char = characters.length > 0 ? characters[0] : null;
 
   for (let row = 0; row < tetromino.shape.length; row++) {
     characterMatrix[row] = [];
     for (let col = 0; col < tetromino.shape[row].length; col++) {
       if (tetromino.shape[row][col] === 1) {
-        characterMatrix[row][col] = characters[charIndex] || null;
-        charIndex++;
+        characterMatrix[row][col] = char;
+        blockCharacters.push(char);
       } else {
         characterMatrix[row][col] = null;
       }
@@ -115,6 +172,7 @@ export function assignCharactersToTetromino(
   return {
     ...tetromino,
     characters: characterMatrix,
+    blockCharacters,
   };
 }
 
@@ -174,5 +232,8 @@ export function cloneTetromino(tetromino: Tetromino): Tetromino {
     position: { ...tetromino.position },
     shape: tetromino.shape.map((row) => [...row]),
     characters: tetromino.characters.map((row) => [...row]),
+    blockCharacters: tetromino.blockCharacters
+      ? [...tetromino.blockCharacters]
+      : [],
   };
 }

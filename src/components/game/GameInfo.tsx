@@ -2,7 +2,7 @@
  * GameInfo - 顯示遊戲信息（分數、等級、連擊等）
  */
 
-import { GameStatus } from '@/types';
+import { GameStatus, ScoreEvent } from '@/types';
 
 interface GameInfoProps {
   score: number;
@@ -11,6 +11,8 @@ interface GameInfoProps {
   wordsMatched: number;
   combo: number;
   status: GameStatus;
+  scoreEvents: ScoreEvent[];
+  activeScoreEventId?: string | null;
 }
 
 export function GameInfo({
@@ -20,6 +22,8 @@ export function GameInfo({
   wordsMatched,
   combo,
   status,
+  scoreEvents,
+  activeScoreEventId,
 }: GameInfoProps) {
   return (
     <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 shadow-xl border-2 border-gray-700">
@@ -67,6 +71,59 @@ export function GameInfo({
             </div>
           </div>
         </div>
+
+        {/* 得分詳情 */}
+        {scoreEvents.length > 0 && (
+          <div className="bg-black/40 rounded p-3 border border-gray-700">
+            <div className="text-gray-200 text-sm font-chinese mb-2">
+              得分明細
+            </div>
+            <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
+              {scoreEvents.map(event => (
+                <div
+                  key={event.id}
+                  className={`rounded p-2 text-sm font-chinese border ${
+                    activeScoreEventId === event.id
+                      ? 'bg-yellow-500/10 border-yellow-400 shadow-md'
+                      : 'bg-gray-900/40 border-transparent'
+                  }`}
+                >
+                  {event.type === 'word' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-green-300 font-bold">
+                        <span>詞語加分</span>
+                        <span>+{event.totalScore}</span>
+                      </div>
+                      <ul className="text-gray-100 text-xs space-y-1">
+                        {event.words.map(word => (
+                          <li
+                            key={`${event.id}-${word.text}`}
+                            className="flex justify-between"
+                          >
+                            <span>• {word.text}</span>
+                            <span className="text-green-400 font-mono">
+                              +{word.score}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      {event.comboBonus > 0 && (
+                        <div className="text-yellow-300 text-xs font-bold text-right">
+                          連擊加成 +{event.comboBonus}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-blue-300 font-bold">
+                      <span>消除 {event.lines} 行</span>
+                      <span>+{event.score}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 遊戲狀態 */}
         {status === GameStatus.PAUSED && (

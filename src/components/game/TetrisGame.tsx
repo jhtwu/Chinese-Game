@@ -3,7 +3,7 @@
  * 整合 TetrisEngine、WordMatcher 和所有遊戲邏輯
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GameCanvas } from './GameCanvas';
 import { GameInfo } from './GameInfo';
 import { NextTetrominoPreview } from './NextTetrominoPreview';
@@ -11,9 +11,19 @@ import { TetrisEngine } from '@/game/core/TetrisEngine';
 import { WordMatcher } from '@/game/word/WordMatcher';
 import { createTetromino, assignCharactersToTetromino } from '@/game/core/Tetromino';
 import { CollisionDetector } from '@/game/core/CollisionDetector';
-import { clearFullLines, removeMatchedCells } from '@/game/core/Grid';
+import {
+  clearFullLines,
+  removeMatchedCells,
+  applyGravityToColumns,
+} from '@/game/core/Grid';
 import { useKeyboard } from '@/hooks/useKeyboard';
-import { GameStatus, Tetromino, Word } from '@/types';
+import {
+  GameStatus,
+  Tetromino,
+  Word,
+  ScoreEvent,
+  HighlightedMatch,
+} from '@/types';
 import wordData from '@/data/words/hsk-1-sample.json';
 
 // 遊戲配置
@@ -21,6 +31,9 @@ const INITIAL_LEVEL = 1;
 const INITIAL_DROP_INTERVAL = 1000; // 1秒
 const LEVEL_UP_LINES = 10; // 每10行升一級
 const DROP_SPEED_INCREASE = 0.9; // 每級速度提升 10%
+const MATCH_HIGHLIGHT_DURATION = 3000; // 詞語消除閃動時間（毫秒）
+const createScoreEventId = () =>
+  `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 export function TetrisGame() {
   // 遊戲引擎和匹配器
@@ -36,27 +49,70 @@ export function TetrisGame() {
   const [combo, setCombo] = useState(0);
   const [nextTetromino, setNextTetromino] = useState<Tetromino | null>(null);
   const [ghostTetromino, setGhostTetromino] = useState<Tetromino | null>(null);
+  const [scoreEvents, setScoreEvents] = useState<ScoreEvent[]>([]);
+  const [activeScoreEventId, setActiveScoreEventId] = useState<string | null>(null);
+  const [highlightedMatches, setHighlightedMatches] = useState<HighlightedMatch[]>([]);
+  const [highlightFlashOn, setHighlightFlashOn] = useState(false);
+  const [isResolvingMatches, setIsResolvingMatches] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const wordList = useMemo(
+    () => (wordData.words as Word[]).map(word => word.word),
+    []
+  );
 
   // 定時器
   const dropIntervalRef = useRef<number>(INITIAL_DROP_INTERVAL);
   const lastDropTimeRef = useRef<number>(0);
   const gameLoopRef = useRef<number>();
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const highlightFlashIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
+
+  const pushScoreEvent = useCallback((event: ScoreEvent) => {
+    setScoreEvents(prev => [event, ...prev].slice(0, 5));
+    setActiveScoreEventId(event.id);
+  }, []);
+
+  const pushDebugLog = useCallback((message: string) => {
+    setDebugLogs(prev => [message, ...prev].slice(0, 8));
+  }, []);
 
   /**
    * 獲取隨機字符給方塊
    */
   const getRandomCharacters = useCallback((count: number): string[] => {
     const allCharacters = wordData.words.flatMap((w: any) => w.characters);
-    const characters: string[] = [];
+    const randomChar =
+      allCharacters[Math.floor(Math.random() * allCharacters.length)];
+    return Array(count).fill(randomChar);
+  }, []);
 
-    for (let i = 0; i < count; i++) {
-      const randomChar =
-        allCharacters[Math.floor(Math.random() * allCharacters.length)];
-      characters.push(randomChar);
+  useEffect(() => {
+    if (highlightedMatches.length === 0) {
+      setHighlightFlashOn(false);
+      if (highlightFlashIntervalRef.current) {
+        clearInterval(highlightFlashIntervalRef.current);
+        highlightFlashIntervalRef.current = null;
+      }
+      return;
     }
 
-    return characters;
-  }, []);
+    setHighlightFlashOn(true);
+    if (highlightFlashIntervalRef.current) {
+      clearInterval(highlightFlashIntervalRef.current);
+    }
+    highlightFlashIntervalRef.current = setInterval(() => {
+      setHighlightFlashOn(prev => !prev);
+    }, 180);
+
+    return () => {
+      if (highlightFlashIntervalRef.current) {
+        clearInterval(highlightFlashIntervalRef.current);
+        highlightFlashIntervalRef.current = null;
+      }
+    };
+  }, [highlightedMatches.length]);
 
   /**
    * 創建新方塊（帶字符）
@@ -98,7 +154,7 @@ export function TetrisGame() {
   /**
    * 處理詞語匹配和消除
    */
-  const handleWordMatching = useCallback(() => {
+  const handleWordMatching = useCallback(async () => {
     const matches = wordMatcher.findMatches(engine.grid);
 
     if (matches.length > 0) {
@@ -109,7 +165,10 @@ export function TetrisGame() {
       matches.forEach(match => {
         matchScore += match.score;
       });
-
+      const matchedWords = matches.map(match => ({
+        text: match.word.word,
+        score: match.score,
+      }));
       // 連擊加成
       const newCombo = matches.length;
       const comboBonus = newCombo > 1 ? matchScore * (newCombo - 1) * 0.5 : 0;
@@ -117,27 +176,91 @@ export function TetrisGame() {
       setScore(prev => prev + matchScore + comboBonus);
       setWordsMatched(prev => prev + matches.length);
       setCombo(newCombo);
-
-      // 移除匹配的方塊
-      matches.forEach(match => {
-        engine.grid = removeMatchedCells(engine.grid, match.positions);
+      pushScoreEvent({
+        id: createScoreEventId(),
+        type: 'word',
+        words: matchedWords,
+        comboBonus,
+        totalScore: matchScore + comboBonus,
       });
+      pushDebugLog(
+        `詞語 ${matches.map(m => m.word.word).join(', ')} -> combo ${
+          newCombo
+        }x, 基礎分 ${matchScore}, 連擊加成 ${comboBonus}`
+      );
+      setIsResolvingMatches(true);
+      const pendingGravityColumns = new Set<number>();
+
+      for (const match of matches) {
+        const highlighted: HighlightedMatch = {
+          word: match.word.word,
+          score: match.score,
+          positions: match.positions,
+        };
+
+        setHighlightedMatches([highlighted]);
+
+        await new Promise<void>(resolve => {
+          if (highlightTimeoutRef.current) {
+            clearTimeout(highlightTimeoutRef.current);
+          }
+          highlightTimeoutRef.current = setTimeout(() => {
+            resolve();
+          }, MATCH_HIGHLIGHT_DURATION);
+        });
+
+        const { gridAfterRemoval, affectedColumns } = removeMatchedCells(
+          engine.grid,
+          match.positions,
+          { skipGravity: true }
+        );
+        engine.grid = gridAfterRemoval;
+        affectedColumns.forEach(col => pendingGravityColumns.add(col));
+        pushDebugLog(
+          `詞語 ${match.word.word} 清除完成（欄位 ${
+            affectedColumns.join(', ') || '無'
+          }）`
+        );
+        setHighlightedMatches([]);
+      }
+
+      if (pendingGravityColumns.size > 0) {
+        pushDebugLog('所有詞語已消失，準備套用重力');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        engine.grid = applyGravityToColumns(
+          engine.grid,
+          Array.from(pendingGravityColumns)
+        );
+        pushDebugLog(
+          `重力完成，欄位：${Array.from(pendingGravityColumns).join(', ')}`
+        );
+      }
+
+      setHighlightedMatches([]);
+      setIsResolvingMatches(false);
 
       // TODO: 播放音效和動畫
     } else {
       setCombo(0);
+      setHighlightedMatches([]);
+      pushDebugLog('沒有匹配到詞語');
     }
-  }, [engine, wordMatcher]);
+  }, [engine, wordMatcher, pushScoreEvent, pushDebugLog]);
 
   /**
    * 鎖定方塊後的處理
    */
-  const handleTetrominoLocked = useCallback(() => {
+  const handleTetrominoLocked = useCallback(async () => {
+    if (isResolvingMatches) {
+      return;
+    }
     // 1. 檢查詞語匹配
-    handleWordMatching();
+    await handleWordMatching();
 
     // 2. 清除完整行
-    const { newGrid, clearedLines } = clearFullLines(engine.grid);
+    const { newGrid, clearedLines, clearedLineIndices } = clearFullLines(
+      engine.grid
+    );
     engine.grid = newGrid;
 
     if (clearedLines > 0) {
@@ -161,6 +284,15 @@ export function TetrisGame() {
 
         return newTotal;
       });
+      pushScoreEvent({
+        id: createScoreEventId(),
+        type: 'line',
+        lines: clearedLines,
+        score: lineScore,
+      });
+      pushDebugLog(
+        `消除行 ${clearedLines} 行，行索引：${clearedLineIndices.join(', ')}，獲得 ${lineScore} 分`
+      );
     }
 
     // 3. 生成新方塊
@@ -181,6 +313,7 @@ export function TetrisGame() {
     }
 
     calculateGhostPosition();
+    lastDropTimeRef.current = performance.now();
   }, [
     engine,
     nextTetromino,
@@ -188,6 +321,9 @@ export function TetrisGame() {
     handleWordMatching,
     createNewTetromino,
     calculateGhostPosition,
+    pushScoreEvent,
+    isResolvingMatches,
+    pushDebugLog,
   ]);
 
   /**
@@ -198,6 +334,11 @@ export function TetrisGame() {
       if (gameStatus !== GameStatus.PLAYING) {
         return;
       }
+
+       if (isResolvingMatches) {
+         gameLoopRef.current = requestAnimationFrame(gameLoop);
+         return;
+       }
 
       // 自動下落
       if (timestamp - lastDropTimeRef.current >= dropIntervalRef.current) {
@@ -218,7 +359,13 @@ export function TetrisGame() {
 
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     },
-    [gameStatus, engine, handleTetrominoLocked, calculateGhostPosition]
+    [
+      gameStatus,
+      engine,
+      handleTetrominoLocked,
+      calculateGhostPosition,
+      isResolvingMatches,
+    ]
   );
 
   /**
@@ -232,6 +379,20 @@ export function TetrisGame() {
     setLinesCleared(0);
     setWordsMatched(0);
     setCombo(0);
+    setScoreEvents([]);
+    setActiveScoreEventId(null);
+    setHighlightedMatches([]);
+    setHighlightFlashOn(false);
+    setIsResolvingMatches(false);
+    setDebugLogs([]);
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+      highlightTimeoutRef.current = null;
+    }
+    if (highlightFlashIntervalRef.current) {
+      clearInterval(highlightFlashIntervalRef.current);
+      highlightFlashIntervalRef.current = null;
+    }
     dropIntervalRef.current = INITIAL_DROP_INTERVAL;
 
     // 創建初始方塊
@@ -267,19 +428,19 @@ export function TetrisGame() {
   useKeyboard(
     {
       onMoveLeft: () => {
-        if (gameStatus === GameStatus.PLAYING) {
+        if (gameStatus === GameStatus.PLAYING && !isResolvingMatches) {
           engine.moveLeft();
           calculateGhostPosition();
         }
       },
       onMoveRight: () => {
-        if (gameStatus === GameStatus.PLAYING) {
+        if (gameStatus === GameStatus.PLAYING && !isResolvingMatches) {
           engine.moveRight();
           calculateGhostPosition();
         }
       },
       onMoveDown: () => {
-        if (gameStatus === GameStatus.PLAYING) {
+        if (gameStatus === GameStatus.PLAYING && !isResolvingMatches) {
           const result = engine.moveDown();
           if (!result.success && result.message === 'Locked') {
             handleTetrominoLocked();
@@ -288,13 +449,13 @@ export function TetrisGame() {
         }
       },
       onRotate: () => {
-        if (gameStatus === GameStatus.PLAYING) {
+        if (gameStatus === GameStatus.PLAYING && !isResolvingMatches) {
           engine.rotate();
           calculateGhostPosition();
         }
       },
       onHardDrop: () => {
-        if (gameStatus === GameStatus.PLAYING) {
+        if (gameStatus === GameStatus.PLAYING && !isResolvingMatches) {
           engine.hardDrop();
           handleTetrominoLocked();
         }
@@ -314,6 +475,12 @@ export function TetrisGame() {
     return () => {
       if (gameLoopRef.current) {
         cancelAnimationFrame(gameLoopRef.current);
+      }
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current);
+      }
+      if (highlightFlashIntervalRef.current) {
+        clearInterval(highlightFlashIntervalRef.current);
       }
     };
   }, []);
@@ -336,7 +503,26 @@ export function TetrisGame() {
               wordsMatched={wordsMatched}
               combo={combo}
               status={gameStatus}
+              scoreEvents={scoreEvents}
+              activeScoreEventId={activeScoreEventId}
             />
+            {debugLogs.length > 0 && (
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 shadow-xl border-2 border-purple-700">
+                <h3 className="text-lg font-chinese font-bold text-purple-300 mb-3 text-center">
+                  🧪 Debug Info
+                </h3>
+                <div className="text-xs text-gray-200 font-mono space-y-2 max-h-72 overflow-y-auto pr-2">
+                  {debugLogs.map((log, index) => (
+                    <div
+                      key={`${log}-${index}`}
+                      className="bg-black/30 rounded px-2 py-1 border border-purple-500/30"
+                    >
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 中間：遊戲畫面 */}
@@ -345,7 +531,19 @@ export function TetrisGame() {
               grid={engine.grid}
               currentTetromino={engine.currentTetromino}
               ghostTetromino={ghostTetromino}
+              highlightedMatches={highlightedMatches}
+              highlightFlashOn={highlightFlashOn}
             />
+            {engine.currentTetromino?.blockCharacters.length ? (
+              <div className="mt-4 bg-black/40 px-4 py-2 rounded-lg text-lg text-green-200 font-chinese border border-green-500/40">
+                <div className="text-sm text-gray-300">當前字符</div>
+                <div className="text-2xl tracking-wider">
+                  {engine.currentTetromino.blockCharacters
+                    .filter(Boolean)
+                    .join(' ')}
+                </div>
+              </div>
+            ) : null}
 
             {/* 開始/重新開始按鈕 */}
             {(gameStatus === GameStatus.IDLE ||
@@ -388,6 +586,25 @@ export function TetrisGame() {
                 <div>• 連擊有額外加成！</div>
               </div>
             </div>
+
+            {/* 詞庫列表 */}
+            {wordList.length > 0 && (
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 shadow-xl border-2 border-blue-700">
+                <h3 className="text-lg font-chinese font-bold text-blue-300 mb-3 text-center">
+                  📚 詞庫（{wordList.length}）
+                </h3>
+                <div className="text-sm text-gray-100 font-chinese grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-2">
+                  {wordList.map(word => (
+                    <div
+                      key={word}
+                      className="bg-black/30 rounded px-2 py-1 text-center border border-white/10"
+                    >
+                      {word}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -39,12 +39,18 @@ export function NextTetrominoPreview({
 
   const renderTetromino = () => {
     const cells = [];
+    let blockIndex = 0;
 
     for (let row = 0; row < shape.length; row++) {
       for (let col = 0; col < shape[row].length; col++) {
         if (shape[row][col]) {
           const x = offsetX + col * cellSize;
           const y = offsetY + row * cellSize;
+          const char =
+            characters[row]?.[col] ??
+            tetromino.blockCharacters?.[blockIndex] ??
+            null;
+          blockIndex++;
 
           cells.push(
             <Group key={`preview-${row}-${col}`}>
@@ -62,13 +68,13 @@ export function NextTetrominoPreview({
                 shadowOpacity={0.3}
               />
               {/* 中文字符 */}
-              {characters[row][col] && (
+              {char && (
                 <Text
                   x={x}
                   y={y}
                   width={cellSize}
                   height={cellSize}
-                  text={characters[row][col]!}
+                  text={char}
                   fontSize={cellSize * 0.6}
                   fontFamily="Noto Sans TC, sans-serif"
                   fill="#FFFFFF"
@@ -108,6 +114,11 @@ export function NextTetrominoPreview({
           </Layer>
         </Stage>
       </div>
+      {tetromino.blockCharacters.length > 0 && (
+        <div className="mt-3 text-center text-sm text-gray-200 font-chinese">
+          {tetromino.blockCharacters.filter(Boolean).join(' ')}
+        </div>
+      )}
     </div>
   );
 }

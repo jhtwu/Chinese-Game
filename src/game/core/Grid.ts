@@ -80,21 +80,28 @@ export function lockTetrominoToGrid(
   tetromino: Tetromino
 ): Grid {
   const newGrid = cloneGrid(grid);
+  let blockIndex = 0;
 
   for (let row = 0; row < tetromino.shape.length; row++) {
     for (let col = 0; col < tetromino.shape[row].length; col++) {
       if (tetromino.shape[row][col] === 1) {
         const gridX = tetromino.position.x + col;
         const gridY = tetromino.position.y + row;
+        const char =
+          tetromino.characters[row]?.[col] ??
+          tetromino.blockCharacters?.[blockIndex] ??
+          null;
 
         if (isValidPosition({ x: gridX, y: gridY })) {
           newGrid[gridY][gridX] = {
             occupied: true,
-            character: tetromino.characters[row][col],
+            character: char,
             color: tetromino.color,
             locked: true,
           };
         }
+
+        blockIndex++;
       }
     }
   }
@@ -283,32 +290,73 @@ export function canPlaceTetromino(grid: Grid, tetromino: Tetromino): boolean {
  * @param positions 要移除的位置
  * @returns 新網格
  */
-export function removeMatchedCells(grid: Grid, positions: Position[]): Grid {
+interface RemoveMatchedOptions {
+  skipGravity?: boolean;
+  affectedColumnsOnly?: number[];
+}
+
+export function removeMatchedCells(
+  grid: Grid,
+  positions: Position[],
+  options: RemoveMatchedOptions = {}
+): Grid | { gridAfterRemoval: Grid; affectedColumns: number[] } {
   let newGrid = cloneGrid(grid);
+  const affectedColumnsSet = new Set<number>();
 
   // 1. 清除匹配的格子
   for (const pos of positions) {
     if (isValidPosition(pos)) {
       newGrid[pos.y][pos.x] = createEmptyCell();
+      affectedColumnsSet.add(pos.x);
     }
   }
 
-  // 2. 應用重力：讓上方的方塊下落
-  for (let col = 0; col < GRID_WIDTH; col++) {
-    // 從下往上掃描每一列
-    let writeRow = GRID_HEIGHT - 1; // 寫入位置
+  const affectedColumns = Array.from(affectedColumnsSet.values());
+
+  if (options.skipGravity) {
+    return { gridAfterRemoval: newGrid, affectedColumns };
+  }
+
+  const columnsToProcess =
+    options.affectedColumnsOnly && options.affectedColumnsOnly.length > 0
+      ? options.affectedColumnsOnly
+      : affectedColumns.length > 0
+      ? affectedColumns
+      : Array.from({ length: GRID_WIDTH }, (_, i) => i);
+
+  return applyGravityToColumns(newGrid, columnsToProcess);
+}
+
+/**
+ * 僅對指定欄位套用重力，未指定則處理整個網格
+ */
+export function applyGravityToColumns(
+  grid: Grid,
+  columns?: number[]
+): Grid {
+  const workingGrid = cloneGrid(grid);
+  const columnsToProcess =
+    columns && columns.length > 0
+      ? columns
+      : Array.from({ length: GRID_WIDTH }, (_, i) => i);
+
+  for (const col of columnsToProcess) {
+    let writeRow = GRID_HEIGHT - 1;
 
     for (let readRow = GRID_HEIGHT - 1; readRow >= 0; readRow--) {
-      // 如果格子被佔用，移動到寫入位置
-      if (newGrid[readRow][col].occupied) {
+      if (workingGrid[readRow][col].occupied) {
         if (writeRow !== readRow) {
-          newGrid[writeRow][col] = newGrid[readRow][col];
-          newGrid[readRow][col] = createEmptyCell();
+          workingGrid[writeRow][col] = workingGrid[readRow][col];
+          workingGrid[readRow][col] = createEmptyCell();
         }
         writeRow--;
       }
     }
+
+    for (; writeRow >= 0; writeRow--) {
+      workingGrid[writeRow][col] = createEmptyCell();
+    }
   }
 
-  return newGrid;
+  return workingGrid;
 }

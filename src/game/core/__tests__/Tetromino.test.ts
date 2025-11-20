@@ -140,7 +140,8 @@ describe('Tetromino', () => {
         .flat()
         .filter((c): c is string => c !== null);
 
-      expect(chars).toEqual(['你', '好', '世', '界']);
+      expect(chars).toHaveLength(4);
+      expect(new Set(chars)).toEqual(new Set(['你']));
     });
   });
 

@@ -28,6 +28,7 @@ export interface Tetromino {
   shape: number[][];
   characters: (string | null)[][];
   color: string;
+  blockCharacters: (string | null)[];
 }
 
 // ============================================================================
@@ -216,6 +217,12 @@ export interface Match {
   score: number;
 }
 
+export interface HighlightedMatch {
+  word: string;
+  score: number;
+  positions: Position[];
+}
+
 // ============================================================================
 // 效果相關類型
 // ============================================================================
@@ -227,3 +234,22 @@ export interface Effect {
   data: unknown;
   duration: number;
 }
+
+// ============================================================================
+// 分數事件（UI 顯示用）
+// ============================================================================
+
+export type ScoreEvent =
+  | {
+      id: string;
+      type: 'word';
+      words: Array<{ text: string; score: number }>;
+      comboBonus: number;
+      totalScore: number;
+    }
+  | {
+      id: string;
+      type: 'line';
+      lines: number;
+      score: number;
+    };
