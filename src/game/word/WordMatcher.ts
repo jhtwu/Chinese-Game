@@ -14,6 +14,11 @@ import { GRID_WIDTH, GRID_HEIGHT } from '../core/Grid';
 export interface WordMatcherConfig {
   minWordLength: number; // 最小詞長
   maxWordLength: number; // 最大詞長
+  twoCharWordScore?: number; // 2字詞分數
+  threeCharWordScore?: number; // 3字詞分數
+  fourCharWordScore?: number; // 4字詞分數
+  idiomBonus?: number; // 成語額外獎勵
+  hskLevelBonus?: number; // HSK級別加成
 }
 
 /**
@@ -22,6 +27,11 @@ export interface WordMatcherConfig {
 const DEFAULT_CONFIG: WordMatcherConfig = {
   minWordLength: 2,
   maxWordLength: 4,
+  twoCharWordScore: 10,
+  threeCharWordScore: 20,
+  fourCharWordScore: 40,
+  idiomBonus: 20,
+  hskLevelBonus: 2,
 };
 
 /**
@@ -210,13 +220,13 @@ export class WordMatcher {
     // 根據詞長計算基礎分數
     switch (length) {
       case 2:
-        baseScore = 10;
+        baseScore = this.config.twoCharWordScore!;
         break;
       case 3:
-        baseScore = 20;
+        baseScore = this.config.threeCharWordScore!;
         break;
       case 4:
-        baseScore = 40;
+        baseScore = this.config.fourCharWordScore!;
         break;
       default:
         baseScore = length * 5;
@@ -224,11 +234,11 @@ export class WordMatcher {
 
     // 成語額外獎勵
     if (word.isIdiom) {
-      baseScore += 20;
+      baseScore += this.config.idiomBonus!;
     }
 
     // HSK 級別加成（高級別詞彙給予額外分數）
-    const hskBonus = word.hskLevel * 2;
+    const hskBonus = word.hskLevel * this.config.hskLevelBonus!;
 
     return baseScore + hskBonus;
   }

@@ -1,327 +1,161 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-11-18",
-  "hskLevel": 1,
-  "totalWords": 20,
+  "lastUpdated": "2025-11-19T00:00:00.000Z",
   "words": [
     {
-      "id": "xuéxí",
+      "id": "xuexi",
       "word": "學習",
       "characters": ["學", "習"],
       "pinyin": "xué xí",
       "pinyinArray": ["xué", "xí"],
       "hskLevel": 1,
       "category": "education",
-      "definition": {
-        "en": "to study, to learn",
-        "zh": "學習知識或技能"
-      },
-      "example": "我每天學習中文。",
+      "definition": { "en": "to study; to learn", "zh": "學習" },
+      "example": "我喜歡學習中文。",
       "frequency": 0.95,
       "isIdiom": false
     },
     {
-      "id": "xuéxiào",
+      "id": "xuexiao",
       "word": "學校",
       "characters": ["學", "校"],
       "pinyin": "xué xiào",
       "pinyinArray": ["xué", "xiào"],
       "hskLevel": 1,
       "category": "education",
-      "definition": {
-        "en": "school",
-        "zh": "教育機構"
-      },
-      "example": "這是我的學校。",
+      "definition": { "en": "school", "zh": "學校" },
+      "example": "妹妹每天早上七點去學校。",
       "frequency": 0.92,
       "isIdiom": false
     },
     {
-      "id": "xuésheng",
-      "word": "學生",
-      "characters": ["學", "生"],
-      "pinyin": "xué shēng",
-      "pinyinArray": ["xué", "shēng"],
+      "id": "shenghuo",
+      "word": "生活",
+      "characters": ["生", "活"],
+      "pinyin": "shēng huó",
+      "pinyinArray": ["shēng", "huó"],
       "hskLevel": 1,
-      "category": "education",
-      "definition": {
-        "en": "student",
-        "zh": "在學校學習的人"
-      },
-      "example": "我是學生。",
+      "category": "other",
+      "definition": { "en": "life; living", "zh": "生活" },
+      "example": "都市生活很忙碌。",
+      "frequency": 0.9,
+      "isIdiom": false
+    },
+    {
+      "id": "pengyou",
+      "word": "朋友",
+      "characters": ["朋", "友"],
+      "pinyin": "péng yǒu",
+      "pinyinArray": ["péng", "yǒu"],
+      "hskLevel": 1,
+      "category": "relationship",
+      "definition": { "en": "friend", "zh": "朋友" },
+      "example": "我們是多年的好朋友。",
       "frequency": 0.93,
       "isIdiom": false
     },
     {
-      "id": "lǎoshī",
-      "word": "老師",
-      "characters": ["老", "師"],
-      "pinyin": "lǎo shī",
-      "pinyinArray": ["lǎo", "shī"],
-      "hskLevel": 1,
-      "category": "education",
-      "definition": {
-        "en": "teacher",
-        "zh": "教導學生的人"
-      },
-      "example": "他是我的老師。",
-      "frequency": 0.91,
-      "isIdiom": false
-    },
-    {
-      "id": "péngyou",
-      "word": "朋友",
-      "characters": ["朋", "友"],
-      "pinyin": "péng you",
-      "pinyinArray": ["péng", "you"],
-      "hskLevel": 1,
+      "id": "jiating",
+      "word": "家庭",
+      "characters": ["家", "庭"],
+      "pinyin": "jiā tíng",
+      "pinyinArray": ["jiā", "tíng"],
+      "hskLevel": 2,
       "category": "relationship",
-      "definition": {
-        "en": "friend",
-        "zh": "相互有交情的人"
-      },
-      "example": "我有很多朋友。",
-      "frequency": 0.94,
-      "isIdiom": false
-    },
-    {
-      "id": "jiārén",
-      "word": "家人",
-      "characters": ["家", "人"],
-      "pinyin": "jiā rén",
-      "pinyinArray": ["jiā", "rén"],
-      "hskLevel": 1,
-      "category": "relationship",
-      "definition": {
-        "en": "family member",
-        "zh": "家庭成員"
-      },
-      "example": "我愛我的家人。",
-      "frequency": 0.89,
-      "isIdiom": false
-    },
-    {
-      "id": "bàba",
-      "word": "爸爸",
-      "characters": ["爸", "爸"],
-      "pinyin": "bà ba",
-      "pinyinArray": ["bà", "ba"],
-      "hskLevel": 1,
-      "category": "relationship",
-      "definition": {
-        "en": "father, dad",
-        "zh": "父親"
-      },
-      "example": "我爸爸是老師。",
-      "frequency": 0.88,
-      "isIdiom": false
-    },
-    {
-      "id": "māma",
-      "word": "媽媽",
-      "characters": ["媽", "媽"],
-      "pinyin": "mā ma",
-      "pinyinArray": ["mā", "ma"],
-      "hskLevel": 1,
-      "category": "relationship",
-      "definition": {
-        "en": "mother, mom",
-        "zh": "母親"
-      },
-      "example": "我媽媽很好。",
-      "frequency": 0.87,
-      "isIdiom": false
-    },
-    {
-      "id": "zhōngguó",
-      "word": "中國",
-      "characters": ["中", "國"],
-      "pinyin": "zhōng guó",
-      "pinyinArray": ["zhōng", "guó"],
-      "hskLevel": 1,
-      "category": "country",
-      "definition": {
-        "en": "China",
-        "zh": "中華人民共和國"
-      },
-      "example": "我來自中國。",
-      "frequency": 0.96,
-      "isIdiom": false
-    },
-    {
-      "id": "měiguó",
-      "word": "美國",
-      "characters": ["美", "國"],
-      "pinyin": "měi guó",
-      "pinyinArray": ["měi", "guó"],
-      "hskLevel": 1,
-      "category": "country",
-      "definition": {
-        "en": "USA, America",
-        "zh": "美利堅合眾國"
-      },
-      "example": "他住在美國。",
-      "frequency": 0.85,
-      "isIdiom": false
-    },
-    {
-      "id": "hànzì",
-      "word": "漢字",
-      "characters": ["漢", "字"],
-      "pinyin": "hàn zì",
-      "pinyinArray": ["hàn", "zì"],
-      "hskLevel": 1,
-      "category": "language",
-      "definition": {
-        "en": "Chinese character",
-        "zh": "中文文字"
-      },
-      "example": "我在學習漢字。",
-      "frequency": 0.78,
-      "isIdiom": false
-    },
-    {
-      "id": "shūběn",
-      "word": "書本",
-      "characters": ["書", "本"],
-      "pinyin": "shū běn",
-      "pinyinArray": ["shū", "běn"],
-      "hskLevel": 1,
-      "category": "object",
-      "definition": {
-        "en": "book",
-        "zh": "印刷或手寫的作品"
-      },
-      "example": "這是一本書。",
-      "frequency": 0.84,
-      "isIdiom": false
-    },
-    {
-      "id": "zhuōzi",
-      "word": "桌子",
-      "characters": ["桌", "子"],
-      "pinyin": "zhuō zi",
-      "pinyinArray": ["zhuō", "zi"],
-      "hskLevel": 1,
-      "category": "object",
-      "definition": {
-        "en": "table, desk",
-        "zh": "傢具，有平面的桌面"
-      },
-      "example": "桌子上有書。",
+      "definition": { "en": "family", "zh": "家庭" },
+      "example": "家庭給我力量。",
       "frequency": 0.82,
       "isIdiom": false
     },
     {
-      "id": "yǐzi",
-      "word": "椅子",
-      "characters": ["椅", "子"],
-      "pinyin": "yǐ zi",
-      "pinyinArray": ["yǐ", "zi"],
-      "hskLevel": 1,
-      "category": "object",
-      "definition": {
-        "en": "chair",
-        "zh": "坐的傢具"
-      },
-      "example": "請坐在椅子上。",
-      "frequency": 0.81,
+      "id": "tushuguan",
+      "word": "圖書館",
+      "characters": ["圖", "書", "館"],
+      "pinyin": "tú shū guǎn",
+      "pinyinArray": ["tú", "shū", "guǎn"],
+      "hskLevel": 2,
+      "category": "education",
+      "definition": { "en": "library", "zh": "圖書館" },
+      "example": "圖書館今天開到晚上九點。",
+      "frequency": 0.85,
       "isIdiom": false
     },
     {
-      "id": "kāfēi",
-      "word": "咖啡",
-      "characters": ["咖", "啡"],
-      "pinyin": "kā fēi",
-      "pinyinArray": ["kā", "fēi"],
+      "id": "gongzuo",
+      "word": "工作",
+      "characters": ["工", "作"],
+      "pinyin": "gōng zuò",
+      "pinyinArray": ["gōng", "zuò"],
       "hskLevel": 1,
-      "category": "food",
-      "definition": {
-        "en": "coffee",
-        "zh": "用咖啡豆煮成的飲料"
-      },
-      "example": "我喜歡喝咖啡。",
-      "frequency": 0.86,
-      "isIdiom": false
-    },
-    {
-      "id": "cháshuǐ",
-      "word": "茶水",
-      "characters": ["茶", "水"],
-      "pinyin": "chá shuǐ",
-      "pinyinArray": ["chá", "shuǐ"],
-      "hskLevel": 1,
-      "category": "food",
-      "definition": {
-        "en": "tea (beverage)",
-        "zh": "茶葉泡的水"
-      },
-      "example": "請喝茶水。",
-      "frequency": 0.79,
-      "isIdiom": false
-    },
-    {
-      "id": "jīntiān",
-      "word": "今天",
-      "characters": ["今", "天"],
-      "pinyin": "jīn tiān",
-      "pinyinArray": ["jīn", "tiān"],
-      "hskLevel": 1,
-      "category": "time",
-      "definition": {
-        "en": "today",
-        "zh": "現在這一天"
-      },
-      "example": "今天是星期一。",
-      "frequency": 0.97,
-      "isIdiom": false
-    },
-    {
-      "id": "míngtiān",
-      "word": "明天",
-      "characters": ["明", "天"],
-      "pinyin": "míng tiān",
-      "pinyinArray": ["míng", "tiān"],
-      "hskLevel": 1,
-      "category": "time",
-      "definition": {
-        "en": "tomorrow",
-        "zh": "今天的下一天"
-      },
-      "example": "明天見！",
-      "frequency": 0.95,
-      "isIdiom": false
-    },
-    {
-      "id": "shíjiān",
-      "word": "時間",
-      "characters": ["時", "間"],
-      "pinyin": "shí jiān",
-      "pinyinArray": ["shí", "jiān"],
-      "hskLevel": 1,
-      "category": "time",
-      "definition": {
-        "en": "time",
-        "zh": "事物發生的順序"
-      },
-      "example": "你有時間嗎？",
-      "frequency": 0.93,
-      "isIdiom": false
-    },
-    {
-      "id": "xǐhuan",
-      "word": "喜歡",
-      "characters": ["喜", "歡"],
-      "pinyin": "xǐ huan",
-      "pinyinArray": ["xǐ", "huan"],
-      "hskLevel": 1,
-      "category": "emotion",
-      "definition": {
-        "en": "to like, to enjoy",
-        "zh": "對某事物有好感"
-      },
-      "example": "我喜歡學習。",
+      "category": "work",
+      "definition": { "en": "work; job", "zh": "工作" },
+      "example": "她在科技公司工作。",
       "frequency": 0.94,
+      "isIdiom": false
+    },
+    {
+      "id": "yundong",
+      "word": "運動",
+      "characters": ["運", "動"],
+      "pinyin": "yùn dòng",
+      "pinyinArray": ["yùn", "dòng"],
+      "hskLevel": 2,
+      "category": "health",
+      "definition": { "en": "sports; exercise", "zh": "運動" },
+      "example": "每天運動對身體很好。",
+      "frequency": 0.87,
+      "isIdiom": false
+    },
+    {
+      "id": "meishi",
+      "word": "美食",
+      "characters": ["美", "食"],
+      "pinyin": "měi shí",
+      "pinyinArray": ["měi", "shí"],
+      "hskLevel": 2,
+      "category": "food",
+      "definition": { "en": "delicious food", "zh": "美食" },
+      "example": "這個城市有很多美食。",
+      "frequency": 0.8,
+      "isIdiom": false
+    },
+    {
+      "id": "tianqi",
+      "word": "天氣",
+      "characters": ["天", "氣"],
+      "pinyin": "tiān qì",
+      "pinyinArray": ["tiān", "qì"],
+      "hskLevel": 1,
+      "category": "weather",
+      "definition": { "en": "weather", "zh": "天氣" },
+      "example": "今天的天氣很好。",
+      "frequency": 0.91,
+      "isIdiom": false
+    },
+    {
+      "id": "yixin1yi",
+      "word": "一心一意",
+      "characters": ["一", "心", "一", "意"],
+      "pinyin": "yī xīn yī yì",
+      "pinyinArray": ["yī", "xīn", "yī", "yì"],
+      "hskLevel": 4,
+      "category": "emotion",
+      "definition": { "en": "wholeheartedly", "zh": "一心一意" },
+      "example": "他一心一意完成任務。",
+      "frequency": 0.7,
+      "isIdiom": true
+    },
+    {
+      "id": "yingxiangli",
+      "word": "影響力",
+      "characters": ["影", "響", "力"],
+      "pinyin": "yǐng xiǎng lì",
+      "pinyinArray": ["yǐng", "xiǎng", "lì"],
+      "hskLevel": 4,
+      "category": "work",
+      "definition": { "en": "influence", "zh": "影響力" },
+      "example": "這本書對他有很大影響力。",
+      "frequency": 0.65,
       "isIdiom": false
     }
   ]

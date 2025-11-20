@@ -24,26 +24,30 @@ import {
   ScoreEvent,
   HighlightedMatch,
 } from '@/types';
+import { DEFAULT_CONFIG, type GameConfig } from '@/config/gameConfig';
 import wordData from '@/data/words/hsk-1-sample.json';
 
-// 遊戲配置
-const INITIAL_LEVEL = 1;
-const INITIAL_DROP_INTERVAL = 1000; // 1秒
-const LEVEL_UP_LINES = 10; // 每10行升一級
-const DROP_SPEED_INCREASE = 0.9; // 每級速度提升 10%
-const MATCH_HIGHLIGHT_DURATION = 3000; // 詞語消除閃動時間（毫秒）
 const createScoreEventId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 export function TetrisGame() {
+  // 遊戲配置
+  const [config] = useState<GameConfig>(DEFAULT_CONFIG);
+
   // 遊戲引擎和匹配器
   const [engine] = useState(() => new TetrisEngine());
-  const [wordMatcher] = useState(() => new WordMatcher(wordData.words as Word[]));
+  const [wordMatcher] = useState(() => new WordMatcher(wordData.words as Word[], {
+    twoCharWordScore: config.twoCharWordScore,
+    threeCharWordScore: config.threeCharWordScore,
+    fourCharWordScore: config.fourCharWordScore,
+    idiomBonus: config.idiomBonus,
+    hskLevelBonus: config.hskLevelBonus,
+  }));
 
   // 遊戲狀態
   const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.IDLE);
   const [score, setScore] = useState(0);
-  const [level, setLevel] = useState(INITIAL_LEVEL);
+  const [level, setLevel] = useState(config.initialLevel);
   const [linesCleared, setLinesCleared] = useState(0);
   const [wordsMatched, setWordsMatched] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -61,7 +65,7 @@ export function TetrisGame() {
   );
 
   // 定時器
-  const dropIntervalRef = useRef<number>(INITIAL_DROP_INTERVAL);
+  const dropIntervalRef = useRef<number>(config.initialDropInterval);
   const lastDropTimeRef = useRef<number>(0);
   const gameLoopRef = useRef<number>();
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,13 +74,13 @@ export function TetrisGame() {
   );
 
   const pushScoreEvent = useCallback((event: ScoreEvent) => {
-    setScoreEvents(prev => [event, ...prev].slice(0, 5));
+    setScoreEvents(prev => [event, ...prev].slice(0, config.maxScoreEvents));
     setActiveScoreEventId(event.id);
-  }, []);
+  }, [config.maxScoreEvents]);
 
   const pushDebugLog = useCallback((message: string) => {
-    setDebugLogs(prev => [message, ...prev].slice(0, 8));
-  }, []);
+    setDebugLogs(prev => [message, ...prev].slice(0, config.maxDebugLogs));
+  }, [config.maxDebugLogs]);
 
   /**
    * 獲取隨機字符給方塊
@@ -104,7 +108,7 @@ export function TetrisGame() {
     }
     highlightFlashIntervalRef.current = setInterval(() => {
       setHighlightFlashOn(prev => !prev);
-    }, 180);
+    }, config.highlightFlashInterval);
 
     return () => {
       if (highlightFlashIntervalRef.current) {
@@ -171,7 +175,7 @@ export function TetrisGame() {
       }));
       // 連擊加成
       const newCombo = matches.length;
-      const comboBonus = newCombo > 1 ? matchScore * (newCombo - 1) * 0.5 : 0;
+      const comboBonus = newCombo > 1 ? matchScore * (newCombo - 1) * config.comboMultiplier : 0;
 
       setScore(prev => prev + matchScore + comboBonus);
       setWordsMatched(prev => prev + matches.length);
@@ -206,7 +210,7 @@ export function TetrisGame() {
           }
           highlightTimeoutRef.current = setTimeout(() => {
             resolve();
-          }, MATCH_HIGHLIGHT_DURATION);
+          }, config.matchHighlightDuration);
         });
 
         const { gridAfterRemoval, affectedColumns } = removeMatchedCells(
@@ -226,7 +230,7 @@ export function TetrisGame() {
 
       if (pendingGravityColumns.size > 0) {
         pushDebugLog('所有詞語已消失，準備套用重力');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, config.gravityApplyDelay));
         engine.grid = applyGravityToColumns(
           engine.grid,
           Array.from(pendingGravityColumns)
@@ -265,17 +269,17 @@ export function TetrisGame() {
 
     if (clearedLines > 0) {
       console.log('📏 清除行數:', clearedLines);
-      const lineScore = clearedLines * 100 * level;
+      const lineScore = clearedLines * config.lineScore * level;
       setScore(prev => prev + lineScore);
       setLinesCleared(prev => {
         const newTotal = prev + clearedLines;
 
         // 檢查是否升級
-        if (Math.floor(newTotal / LEVEL_UP_LINES) > level - 1) {
+        if (Math.floor(newTotal / config.levelUpLines) > level - 1) {
           setLevel(prevLevel => {
             const newLevel = prevLevel + 1;
             dropIntervalRef.current = Math.floor(
-              INITIAL_DROP_INTERVAL * Math.pow(DROP_SPEED_INCREASE, newLevel - 1)
+              config.initialDropInterval * Math.pow(config.dropSpeedIncrease, newLevel - 1)
             );
             console.log(`🎊 升級到 Level ${newLevel}! 速度: ${dropIntervalRef.current}ms`);
             return newLevel;
@@ -375,7 +379,7 @@ export function TetrisGame() {
     console.log('🎮 遊戲開始!');
     engine.reset();
     setScore(0);
-    setLevel(INITIAL_LEVEL);
+    setLevel(config.initialLevel);
     setLinesCleared(0);
     setWordsMatched(0);
     setCombo(0);
@@ -393,7 +397,7 @@ export function TetrisGame() {
       clearInterval(highlightFlashIntervalRef.current);
       highlightFlashIntervalRef.current = null;
     }
-    dropIntervalRef.current = INITIAL_DROP_INTERVAL;
+    dropIntervalRef.current = config.initialDropInterval;
 
     // 創建初始方塊
     engine.currentTetromino = createNewTetromino();
@@ -506,7 +510,7 @@ export function TetrisGame() {
               scoreEvents={scoreEvents}
               activeScoreEventId={activeScoreEventId}
             />
-            {debugLogs.length > 0 && (
+            {config.enableDebugMode && debugLogs.length > 0 && (
               <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 shadow-xl border-2 border-purple-700">
                 <h3 className="text-lg font-chinese font-bold text-purple-300 mb-3 text-center">
                   🧪 Debug Info
@@ -530,9 +534,10 @@ export function TetrisGame() {
             <GameCanvas
               grid={engine.grid}
               currentTetromino={engine.currentTetromino}
-              ghostTetromino={ghostTetromino}
+              ghostTetromino={config.enableGhostPiece ? ghostTetromino : null}
               highlightedMatches={highlightedMatches}
               highlightFlashOn={highlightFlashOn}
+              cellSize={config.cellSize}
             />
             {engine.currentTetromino?.blockCharacters.length ? (
               <div className="mt-4 bg-black/40 px-4 py-2 rounded-lg text-lg text-green-200 font-chinese border border-green-500/40">
